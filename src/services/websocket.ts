@@ -1,4 +1,6 @@
 import config from '../../public/config.json';
+import ProtobufService from './proto_service';
+import { dataManager } from './data_manager';
 
 export class WebSocketService {
     private static instance: WebSocketService;
@@ -23,13 +25,23 @@ export class WebSocketService {
     private initialize() {
         this.socket.onopen = () => {
             console.log('Connected to WebSocket server');
-            this.send('Hello Server!');
+            // this.send('Hello Server!');
         };
 
         this.socket.onmessage = (event) => {
-            console.log(`Message from server: ${event.data}`);
-            // 处理接收到的消息
+            const blob = event.data;
+        
+            // 将 Blob 转换为 ArrayBuffer
+            blob.arrayBuffer().then((buffer: ArrayBuffer) => {
+                const message = ProtobufService.getInstance().decode(buffer);
+                dataManager.updateMessage(message.cmd, message.data);
+                // console.log(`Message from server: ${JSON.stringify(message)}`);
+                // 处理接收到的消息
+            }).catch((error: any) => {
+                console.error("Error converting Blob to ArrayBuffer:", error);
+            });
         };
+        
 
         this.socket.onclose = () => {
             console.log('Disconnected from WebSocket server');
@@ -40,8 +52,9 @@ export class WebSocketService {
         };
     }
 
-    public send(message: string) {
+    public send(cmd: number, data: object) {
         if (this.socket.readyState === WebSocket.OPEN) {
+            let message = ProtobufService.getInstance().encode(cmd, data);
             this.socket.send(message);
         } else {
             console.error('WebSocket is not open. Ready state:', this.socket.readyState);

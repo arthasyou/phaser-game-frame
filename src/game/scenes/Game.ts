@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
+import eventManager from '../../services/events';
 
 export class Game extends Scene
 {
@@ -30,5 +31,22 @@ export class Game extends Scene
         
         EventBus.emit('current-scene-ready', this);
 
+        // 监听 dataManager 发出的事件，假设 eventName 是一个数字 id
+        eventManager.on('1001', (data: any) => { // '1' 是 messageId 的一个示例
+            this.handleDataUpdate(data);
+        });
+
+    }
+
+    private handleDataUpdate(data: any) {
+        // 处理 dataManager 发来的数据
+
+        
+        console.log('Received data from dataManager:', JSON.stringify(data));
+
+        // 示例：假设 data 包含一个星星的位置，添加一个星星到场景
+        if (data.starPosition) {
+            this.add.image(data.starPosition.x, data.starPosition.y, 'star');
+        }
     }
 }

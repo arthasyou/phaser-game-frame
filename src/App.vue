@@ -3,11 +3,16 @@ import Phaser from 'phaser';
 import { ref, toRaw } from 'vue';
 import PhaserGame from './game/PhaserGame.vue';
 
+import { WebSocketService} from './services/websocket'
+import { m_1001_tos } from './aa';
+
+
 //  References to the PhaserGame component (game and scene are exposed)
 const phaserRef = ref();
 
 const addSprite = () => {
-
+    const data:m_1001_tos = {};
+    WebSocketService.getInstance().send(1001, data);
     const scene = toRaw(phaserRef.value.scene) as Phaser.Scene;
 
     if (scene)

@@ -1,52 +1,34 @@
-import  eventManager  from './events';
-
-interface PlayerData {
-    [key: string]: any; // 用于存储玩家数据的任意键值对
-}
-
-interface GameState {
-    players: { [playerId: string]: PlayerData };
-    gameStatus: 'waiting' | 'playing' | 'finished';
-}
+import eventManager from './events';
 
 class DataManager {
-    private state: GameState;
+    private static instance: DataManager;
+    private messages: { [messageId: number]: any };
 
-    constructor() {
-        this.state = {
-            players: {},
-            gameStatus: 'waiting', // waiting, playing, finished
-        };
+    private constructor() {
+        this.messages = {};
     }
 
-    set(key: keyof GameState, value: any): void {
-        this.state[key] = value;
-        eventManager.emit(`dataChanged:${key}`, value);
-    }
-
-    get<T extends keyof GameState>(key: T): GameState[T] {
-        return this.state[key];
-    }
-
-    updatePlayer(playerId: string, data: Partial<PlayerData>): void {
-        if (!this.state.players[playerId]) {
-            this.state.players[playerId] = {};
+    public static getInstance(): DataManager {
+        if (!DataManager.instance) {
+            DataManager.instance = new DataManager();
         }
-        this.state.players[playerId] = { ...this.state.players[playerId], ...data };
-        eventManager.emit('dataChanged:players', this.state.players);
+        return DataManager.instance;
     }
 
-    getPlayer(playerId: string): PlayerData | undefined {
-        return this.state.players[playerId];
+    public updateMessage(messageId: number, data: any): void {
+        console.log('messageId:', messageId);
+        this.messages[messageId] = data;
+        eventManager.emit(String(messageId), data);
     }
 
-    reset(): void {
-        this.state = {
-            players: {},
-            gameStatus: 'waiting',
-        };
+    public getMessage(messageId: number): any | undefined {
+        return this.messages[messageId];
+    }
+
+    public reset(): void {
+        this.messages = {};
         eventManager.emit('dataReset');
     }
 }
 
-export const dataManager = new DataManager();
+export const dataManager = DataManager.getInstance();
